@@ -1,0 +1,54 @@
+name: Tao Audio Edge TTS
+
+on:
+  workflow_dispatch:
+    inputs:
+      voice_choice:
+        description: 'Chon giong doc'
+        required: true
+        default: 'vi-VN-HoaiMyNeural (Giong Nu Bac)'
+        type: choice
+        options:
+        - vi-VN-HoaiMyNeural (Giong Nu Bac)
+        - vi-VN-NamMinhNeural (Giong Nam Bac)
+      speed_choice:
+        description: 'Chon toc do doc'
+        required: true
+        default: '+0% (Chuan 1.0x)'
+        type: choice
+        options:
+        - '+0% (Chuan 1.0x)'
+        - '+25% (Nhanh 1.25x)'
+        - '+50% (Nhanh 1.5x)'
+        - '+100% (Nhanh 2.0x)'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lay ma nguon
+        uses: actions/checkout@v4
+
+      - name: Cai dat Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Cai dat edge-tts
+        run: pip install edge-tts
+
+      - name: Tao file audio MP3
+        run: |
+          VOICE="${{ github.event.inputs.voice_choice }}"
+          VOICE_CLEAN=$(echo $VOICE | awk '{print $1}')
+          
+          SPEED="${{ github.event.inputs.speed_choice }}"
+          SPEED_CLEAN=$(echo $SPEED | awk '{print $1}')
+          
+          edge-tts --voice $VOICE_CLEAN --rate=$SPEED_CLEAN --file kichban.txt --write-media audio_youtube.mp3
+
+      - name: Tai file MP3 ve
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-output
+          path: audio_youtube.mp3
